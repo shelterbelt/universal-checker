@@ -1,0 +1,12 @@
+[GUI]
+file0=C:\My Installations\UniversalChecker\Program Structure Definition\UniversalChecker\GUI\UNICHECK.HLP
+file1=C:\My Installations\UniversalChecker\Program Structure Definition\UniversalChecker\GUI\UniCheck.cnt
+fulldirectory=
+
+[TopDir]
+SubDir0=GUI
+
+[General]
+Type=FILELIST
+Version=1.00.000
+

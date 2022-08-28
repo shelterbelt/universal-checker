@@ -1,0 +1,119 @@
+////////////////////////////////////////////////////////////////////////////////
+///////////////////InstallShield Media Library Report Summary///////////////////
+////////////////////////////////////////////////////////////////////////////////
+
+Media Name      : UniversalChecker
+Report Filename : C:\My Installations\UniversalChecker\Media\UniversalChecker\Report Files\3-26-2005 9.34.58PM.rpt
+Date            : 03/26/2005
+Time            : 9:34PM
+
+Number of Components:                5 
+Number of File Groups:               7 
+Number of Files:                     8 
+Total Size of Files:         1,787,917 (bytes)
+
+==========
+COMPONENTS
+==========
+
+
+     Program Files
+     Help Files
+     External Utilty Files
+     Integrated Utility Files
+     Shared DLLs
+
+
+////////////////////////////////////////////////////////////////////////////////
+/////////////////////////////////Report Details/////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////
+
+
+================================================================================
+                           COMPONENT: "Program Files"
+================================================================================
+
+SUMMARY:
+    Total Files:                5 (files for this component only)
+    Source Bytes:         214,382 (files for this component only)
+
+
+                       **** File Group: "Data Files" ****
+
+
+<Directory>: C:\My Installations\UniversalChecker\Setup Files\Compressed Files\Language Independent\OS Independent
+
+    Filename                    Date        Time      Size         Version      
+    --------------------------  ----------  --------  -----------  -------------
+    license.txt                 03/13/2005  15:56:00        1,297               
+    --------------------------  ----------  --------  -----------  -------------
+    Count=1                                                 1,297               
+
+
+                **** File Group: "Integrated Utiltiy Files" ****
+
+
+<Directory>: C:\My Installations\UniversalChecker\Program Structure Definition\UniversalChecker
+
+    Filename                    Date        Time      Size         Version      
+    --------------------------  ----------  --------  -----------  -------------
+    CodeChangeCom.exe           03/26/2005  20:51:22       28,672  1.0.0.1      
+    command.txt                 02/02/2005  13:56:00           93               
+    utilFSO.dll                 03/25/2005  22:31:22       28,672  1.0.0.1      
+    --------------------------  ----------  --------  -----------  -------------
+    Count=3                                                57,437               
+
+
+                **** File Group: "Program Executable Files" ****
+
+
+<Directory>: C:\My Installations\UniversalChecker\Program Structure Definition\UniversalChecker\GUI
+
+    Filename                    Date        Time      Size         Version      
+    --------------------------  ----------  --------  -----------  -------------
+    UniCheck.exe                03/26/2005  21:25:11      155,648  4.0.0.1      
+    --------------------------  ----------  --------  -----------  -------------
+    Count=1                                               155,648               
+
+
+================================================================================
+                            COMPONENT: "Help Files"
+================================================================================
+
+SUMMARY:
+    Total Files:                2 (files for this component only)
+    Source Bytes:         792,534 (files for this component only)
+
+
+                       **** File Group: "Help Files" ****
+
+
+<Directory>: C:\My Installations\UniversalChecker\Program Structure Definition\UniversalChecker\GUI
+
+    Filename                    Date        Time      Size         Version      
+    --------------------------  ----------  --------  -----------  -------------
+    UNICHECK.HLP                03/26/2005  21:17:54      577,372               
+    UniCheck.cnt                03/03/2005  10:54:00          780               
+    --------------------------  ----------  --------  -----------  -------------
+    Count=2                                               578,152               
+
+
+================================================================================
+                            COMPONENT: "Shared DLLs"
+================================================================================
+
+SUMMARY:
+    Total Files:                1 (files for this component only)
+    Source Bytes:       1,787,917 (files for this component only)
+
+
+                      **** File Group: "Shared DLLs" ****
+
+
+<Directory>: C:\WINDOWS\system32
+
+    Filename                    Date        Time      Size         Version      
+    --------------------------  ----------  --------  -----------  -------------
+    mfc42.dll                   03/31/2003  05:00:00      995,383  6.0.8665.0   
+    --------------------------  ----------  --------  -----------  -------------
+    Count=1                                               995,383               

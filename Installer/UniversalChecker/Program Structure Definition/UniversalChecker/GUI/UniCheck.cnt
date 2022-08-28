@@ -1,0 +1,21 @@
+:Base UniCheck.hlp
+:Title UniversalChecker
+1 UniversalChecker Help Index=main_index
+1 Menus
+2 File menu=menu_file
+2 Edit menu=menu_edit
+2 View menu=menu_view
+2 Validate menu=menu_validate
+2 Tools menu=menu_tools
+2 Help menu=menu_help
+1 Using UniversalChecker
+2 Use UniversalChecker=HID_USE_UNIVERSALCHECKER
+2 Validate a list of files=HID_VALIDATE_UNICODE
+2 View results after validation=HID_VALIDATE_VIEWRES
+2 Set-up UniversalChecker=HID_PROGRAM_FOLDER
+2 Load or unload scans=HID_TOOLS_INSTALLSCANS
+2 Modify scan settings=HID_TOOLS_INSTALLSCANS
+2 Add, change, or remove file types=HID_TOOLS_ADDFILETYPES
+2 Clear the notification pane=HID_TOOLS_CLEARNOTIFICATION
+2 Integrate with Visual Studio=HID_INTEGRATE_W_VS
+2 Process from Command Line=HID_INTEGRATE_W_VS

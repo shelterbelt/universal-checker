@@ -1,0 +1,24 @@
+[Data]
+TITLE_MAIN=UniversalChecker Validation Harness Installation
+ERROR_COMPONENT=Component:
+COMPANY_NAME=Majic Software
+COMPANY_NAME16=MAJIC
+ERROR_FILEGROUP=File Group:
+ERROR_MOVEDATA=An error occurred during the move data process: %d
+PRODUCT_VERSION=4.00.000
+UNINST_KEY=UniversalChecker
+TITLE_CAPTIONBAR=UniversalChecker Setup
+PRODUCT_NAME16=UNICHECK
+FOLDER_NAME=UniversalChecker
+ERROR_FILE=File:
+ERROR_VGARESOLUTION=This program requires VGA or better resolution.
+PRODUCT_KEY=UniCheck.exe
+UNINST_DISPLAY_NAME=Majic Software UniversalChecker 4.0
+ERROR_UNINSTSETUP=unInstaller setup failed to initialize.  You may not be able to uninstall this product.
+PRODUCT_NAME=UniversalChecker
+
+[General]
+Language=0009
+Type=STRINGTABLESPECIFIC
+Version=1.00.000
+

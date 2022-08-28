@@ -1,0 +1,28 @@
+//////////////////////////////////////////////////////////////////
+//      Majic Software
+//      End User License Agreement
+//      for
+//      UniversalChecker Validation Harness
+//////////////////////////////////////////////////////////////////
+
+This product is copyright 2004 by Majic Software, Mark Johnson 
+sole designer and developer.
+
+This product may be distributed free of charge.  This product is not 
+intended for commercial use.  Distribution or modification of any 
+element of this product to any party without the consent of Majic
+Software or citation of Majic Software and Mark Johnson as the 
+author and provider of UniversalChecker is a violation of this agreement.
+
+The scan utilities included with this installation of 
+UniversalChecker are property of Majic Software and are covered under
+separate license agreement where applicable.
+
+Before installing UniversalChecker, you must agree to not hold
+Majic Software, Mark Johnson, or any other party responsible for 
+any damage or loss of data incurred through the installation, 
+use, or removal of UniversalChecker or included scan utilities.
+
+Majic Software and Mark Johnson make no claim that scan utilities 
+not included with this installation of UniversalChecker will
+work with UniversalChecker.

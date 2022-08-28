@@ -1,0 +1,2 @@
+C:\Program Files\UniversalChecker\source\ -r
+C:\Program Files\UniversalChecker\include\ -r

@@ -1,0 +1,9 @@
+[TopDir]
+file0=C:\My Installations\UniversalChecker\Program Structure Definition\UniversalChecker\CodeChangeCom.exe
+file1=C:\My Installations\UniversalChecker\Program Structure Definition\UniversalChecker\command.txt
+file2=C:\My Installations\UniversalChecker\Program Structure Definition\UniversalChecker\utilFSO.dll
+
+[General]
+Type=FILELIST
+Version=1.00.000
+

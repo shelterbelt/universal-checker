@@ -1,0 +1,805 @@
+
+////////////////////////////////////////////////////////////////////////////////
+//
+//  IIIIIII SSSSSS
+//    II    SS                          InstallShield (R)
+//    II    SSSSSS      (c) 1996-1997, InstallShield Software Corporation
+//    II        SS      (c) 1990-1996, InstallShield Corporation
+//  IIIIIII SSSSSS                     All Rights Reserved.
+//
+//
+//
+//
+//    File Name:  Setup.rul
+//
+//  Description:  InstallShield script
+//
+//     Comments:  This script performs a the setup for UniversalChecker on a
+//                Windows 95 or Windows NT 4.0 platform.
+//
+////////////////////////////////////////////////////////////////////////////////
+
+
+// Include Header Files
+#include "sdlang.h"
+#include "sddialog.h"
+
+
+////////////////////// String Defines ////////////////////////////
+
+#define UNINST_LOGFILE_NAME      "Uninst.isu"
+
+
+//////////////////// Installation Declarations ///////////////////
+
+  // ----- DLL Prototypes -----
+
+
+  // ---- Script Prototypes -----
+
+     // Generated Prototypes
+     prototype ShowDialogs();
+     prototype MoveFileData();
+     prototype HandleMoveDataError( NUMBER );
+     prototype ProcessBeforeDataMove();
+     prototype ProcessAfterDataMove();
+     prototype SetupRegistry();
+     prototype SetupFolders();
+     prototype CleanUpInstall();
+     prototype SetupInstall();
+     prototype SetupScreen();
+     prototype CheckRequirements();
+     prototype DialogShowSdWelcome();
+     prototype DialogShowSdLicense();
+     prototype DialogShowSdSelectFolder();
+     prototype DialogShowSdStartCopy();
+     prototype DialogShowSdFinishReboot();
+
+
+  // ----- Global Variables ------
+
+     // Generated Global Variables
+     BOOL        bWinNT, bIsShellExplorer, bInstallAborted, bIs32BitSetup;
+     STRING      svDir;
+     STRING      svName, svCompany, svSerial;
+     STRING      szAppPath;
+     STRING      svSetupType;
+     LIST        listStartCopy;
+
+
+///////////////////////////////////////////////////////////////////////////////
+//
+//   MAIN PROGRAM
+//
+//      The setup begins here by hiding the visible setup
+//      window.  This is done to allow all the titles, images, etc. to
+//      be established before showing the main window.  The following
+//      logic then performs the setup in a series of steps.
+//
+///////////////////////////////////////////////////////////////////////////////
+program
+    Disable( BACKGROUND );
+
+    CheckRequirements();
+
+    SetupInstall();
+
+    SetupScreen();
+
+    if (ShowDialogs()<0) goto end_install;
+
+    if (ProcessBeforeDataMove()<0) goto end_install;
+
+    if (MoveFileData()<0) goto end_install;
+
+    if (ProcessAfterDataMove()<0) goto end_install;
+
+    if (SetupRegistry()<0) goto end_install;
+
+    if (SetupFolders()<0) goto end_install;
+
+
+  end_install:
+
+    CleanUpInstall();
+
+    // If an unrecoverable error occurred, clean up the partial installation.
+    // Otherwise, exit normally.
+    if (bInstallAborted) then
+        abort;
+    endif;
+
+endprogram
+
+
+///////////////////////////////////////////////////////////////////////////////
+//                                                                           //
+// Function:  ShowDialogs                                                    //
+//                                                                           //
+//  Purpose:  This function manages the display and navigation               //
+//            the standard dialogs that exist in a setup.                    //
+//                                                                           //
+///////////////////////////////////////////////////////////////////////////////
+function ShowDialogs()
+    NUMBER  nResult;
+ begin
+
+    Dlg_Start:      // Beginning of Dialogs Label
+
+    Dlg_SdWelcome:
+        nResult = DialogShowSdWelcome();
+        if (nResult = BACK) goto Dlg_Start;
+
+    Dlg_SdLicense:
+        nResult = DialogShowSdLicense();
+        if (nResult = BACK) goto Dlg_SdWelcome;
+
+    Dlg_SdSelectFolder:
+        nResult = DialogShowSdSelectFolder();
+        if (nResult = BACK) goto Dlg_SdLicense;
+
+    Dlg_SdStartCopy:
+        nResult = DialogShowSdStartCopy();
+        if (nResult = BACK) goto Dlg_SdSelectFolder;
+
+    return 0;
+
+ end;
+
+
+///////////////////////////////////////////////////////////////////////////////
+//                                                                           //
+// Function: ProcessBeforeDataMove                                           //
+//                                                                           //
+//  Purpose: This function performs any necessary operations prior to the    //
+//           actual data move operation.                                     //
+//                                                                           //
+///////////////////////////////////////////////////////////////////////////////
+function ProcessBeforeDataMove()
+    STRING svLogFile;
+    NUMBER nResult;
+ begin
+
+  InstallationInfo( @COMPANY_NAME, @PRODUCT_NAME, @PRODUCT_VERSION, @PRODUCT_KEY );
+
+  svLogFile = UNINST_LOGFILE_NAME;
+
+  nResult = DeinstallStart( svDir, svLogFile, @UNINST_KEY, 0 );
+  if (nResult < 0) then
+      MessageBox( @ERROR_UNINSTSETUP, WARNING );
+  endif;
+
+  szAppPath = TARGETDIR ^ "GUI";
+
+  if ((bIs32BitSetup) && (bIsShellExplorer)) then
+      RegDBSetItem( REGDB_APPPATH, szAppPath );
+      RegDBSetItem( REGDB_APPPATH_DEFAULT, szAppPath ^ @PRODUCT_KEY );
+      RegDBSetItem( REGDB_UNINSTALL_NAME, @UNINST_DISPLAY_NAME );
+  endif;
+
+  return 0;
+ end;
+
+
+///////////////////////////////////////////////////////////////////////////////
+//                                                                           //
+// Function:  MoveFileData                                                   //
+//                                                                           //
+//  Purpose:  This function handles the data movement for                    //
+//            the setup.                                                     //
+//                                                                           //
+///////////////////////////////////////////////////////////////////////////////
+function MoveFileData()
+    NUMBER nResult, nDisk;
+ begin
+
+  nDisk = 1;
+  SetStatusWindow( 0, "" );
+  Disable( DIALOGCACHE );
+  Enable( STATUS );
+  StatusUpdate( ON, 100 );
+  nResult = ComponentMoveData( MEDIA, nDisk, 0 );
+
+  HandleMoveDataError( nResult );
+
+  Disable( STATUS );
+
+  return nResult;
+
+ end;
+
+
+///////////////////////////////////////////////////////////////////////////////
+//                                                                           //
+// Function: HandleMoveDataError                                             //
+//                                                                           //
+//  Purpose: This function handles the error (if any) during the move data   //
+//           operation.                                                      //
+//                                                                           //
+///////////////////////////////////////////////////////////////////////////////
+function HandleMoveDataError( nResult )
+    STRING szErrMsg, svComponent , svFileGroup , svFile;
+ begin
+
+  svComponent = "";
+  svFileGroup = "";
+  svFile = "";
+
+  switch (nResult)
+  case 0:
+       return 0;
+  default:
+       ComponentError ( MEDIA , svComponent , svFileGroup , svFile , nResult );
+       szErrMsg = @ERROR_MOVEDATA  + "\n\n" +
+                  @ERROR_COMPONENT + " " + svComponent + "\n" +
+                  @ERROR_FILEGROUP + " " + svFileGroup + "\n" +
+                  @ERROR_FILE      + " " + svFile;
+       SprintfBox( SEVERE, @TITLE_CAPTIONBAR, szErrMsg, nResult );
+       bInstallAborted = TRUE;
+       return nResult;
+  endswitch;
+
+ end;
+
+
+///////////////////////////////////////////////////////////////////////////////
+//                                                                           //
+// Function: ProcessAfterDataMove                                            //
+//                                                                           //
+//  Purpose: This function performs any necessary operations needed after    //
+//           all data has been moved.                                        //
+//                                                                           //
+///////////////////////////////////////////////////////////////////////////////
+function ProcessAfterDataMove()
+ begin
+
+  return 0;
+ end;
+
+
+///////////////////////////////////////////////////////////////////////////////
+//                                                                           //
+// Function: SetupRegistry                                                   //
+//                                                                           //
+//  Purpose: This function makes the registry entries for this setup.        //
+//                                                                           //
+///////////////////////////////////////////////////////////////////////////////
+function SetupRegistry()
+ STRING szFileExtKey;
+ STRING szDocTypeKey;
+ STRING szFileExt;
+ STRING szDocType;
+ STRING szOpenWithKey;
+ STRING szAppShellKey;
+ STRING szAppKey;
+ STRING szAppSettingsKey;
+ STRING szFileTypesKey;
+ STRING szInstalledScansKey;
+
+ begin
+
+  // Process the registry keys that go into HKEY_CLASSES_ROOT.
+
+  // Set the working node to the current user node.
+  RegDBSetDefaultRoot ( HKEY_CLASSES_ROOT );
+
+  // Load string variables for system integration nodes.
+  szFileExt = ".ucl";
+  szDocType = "UniversalChecker.List";
+  szFileExtKey = "\\.ucl";
+  szDocTypeKey = "\\UniversalChecker.List";
+  szAppShellKey = "\\Applications"^@PRODUCT_KEY;
+
+  // Add the system integration nodes.
+  RegDBCreateKeyEx ( szFileExtKey, "" );
+  RegDBCreateKeyEx ( szDocTypeKey, "" );
+  RegDBCreateKeyEx ( szAppShellKey, "" );
+
+  // Add the file extension keys.
+  RegDBCreateKeyEx ( szFileExtKey^"ShellNew", "" );
+
+  // Add the document type keys.
+  RegDBCreateKeyEx ( szDocTypeKey^"DefaultIcon", "" );
+  RegDBCreateKeyEx ( szDocTypeKey^"shell", "" );
+  RegDBCreateKeyEx ( szDocTypeKey^"shell\\open", "" );
+  RegDBCreateKeyEx ( szDocTypeKey^"shell\\open\\command", "" );
+  RegDBCreateKeyEx ( szDocTypeKey^"shell\\print", "" );
+  RegDBCreateKeyEx ( szDocTypeKey^"shell\\print\\command", "" );
+  RegDBCreateKeyEx ( szDocTypeKey^"shell\\printto", "" );
+  RegDBCreateKeyEx ( szDocTypeKey^"shell\\printto\\command", "" );
+
+  // Add the application shell keys.
+  RegDBCreateKeyEx ( szAppShellKey^"shell", "" );
+  RegDBCreateKeyEx ( szAppShellKey^"shell\\open", "" );
+  RegDBCreateKeyEx ( szAppShellKey^"shell\\open\\command", "" );
+  RegDBCreateKeyEx ( szAppShellKey^"shell\\print", "" );
+  RegDBCreateKeyEx ( szAppShellKey^"shell\\print\\command", "" );
+  RegDBCreateKeyEx ( szAppShellKey^"shell\\printto", "" );
+  RegDBCreateKeyEx ( szAppShellKey^"shell\\printto\\command", "" );
+
+
+  // Set the attributes for the each registry key.
+
+  // File Extension Settings
+  RegDBSetKeyValueEx ( szFileExtKey , "" , REGDB_STRING , szDocType , -1 );
+  RegDBSetKeyValueEx ( szFileExtKey^"ShellNew" , "NullFile" , REGDB_STRING , "" , -1 );
+
+  // Document Type Settings
+  RegDBSetKeyValueEx ( szDocTypeKey , "" , REGDB_STRING , "UniversalChecker List" , -1 );
+  RegDBSetKeyValueEx ( szDocTypeKey^"DefaultIcon" , "" , REGDB_STRING , szAppPath^@PRODUCT_KEY+",1" , -1 );
+  RegDBSetKeyValueEx ( szDocTypeKey^"shell\\open\\command" , "" , REGDB_STRING , szAppPath^@PRODUCT_KEY+" \"%1\"" , -1 );
+  RegDBSetKeyValueEx ( szDocTypeKey^"shell\\print\\command" , "" , REGDB_STRING , szAppPath^@PRODUCT_KEY+" /p \"%1\"" , -1 );
+  RegDBSetKeyValueEx ( szDocTypeKey^"shell\\printto\\command" , "" , REGDB_STRING , szAppPath^@PRODUCT_KEY+" /pt \"%1\" \"%2\" \"%3\" \"%4\"" , -1 );
+
+  // Application Shell Settings
+  RegDBSetKeyValueEx ( szAppShellKey^"shell\\open\\command" , "" , REGDB_STRING , szAppPath^@PRODUCT_KEY+" \"%1\"" , -1 );
+  RegDBSetKeyValueEx ( szAppShellKey^"shell\\print\\command" , "" , REGDB_STRING , szAppPath^@PRODUCT_KEY+" /p \"%1\"" , -1 );
+  RegDBSetKeyValueEx ( szAppShellKey^"shell\\printto\\command" , "" , REGDB_STRING , szAppPath^@PRODUCT_KEY+" /pt \"%1\" \"%2\" \"%3\" \"%4\"" , -1 );
+
+
+  // Process the registry keys that go into HKEY_CURRENT_USER.
+
+  // Set the working node to the current user node.
+  RegDBSetDefaultRoot ( HKEY_CURRENT_USER );
+
+  // Load string variables for system integration nodes.
+  szOpenWithKey = "Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\FileExts"^szFileExt;
+
+  // Load string variables for the base nodes.
+  szAppKey = "Software\\Majic Software\\UniversalChecker";
+  szAppSettingsKey = szAppKey ^ "Settings";
+  szFileTypesKey = szAppKey ^ "Valid File Types";
+  szInstalledScansKey = szAppKey ^ "Installed Scans";
+
+  // Add the base nodes to the registry.
+  RegDBCreateKeyEx ( szOpenWithKey, "" );
+
+  RegDBCreateKeyEx ( szAppKey, "" );    // The program's base node.
+  RegDBCreateKeyEx ( szAppSettingsKey, "" );
+  RegDBCreateKeyEx ( szFileTypesKey, "" );
+  RegDBCreateKeyEx ( szInstalledScansKey, "" );
+
+  // Add open with keys.
+  RegDBCreateKeyEx ( szOpenWithKey^"OpenWithList", "" );
+  RegDBCreateKeyEx ( szOpenWithKey^"OpenWithProgids", "" );
+
+  // Add the installed scans keys.
+  RegDBCreateKeyEx ( szInstalledScansKey^"2001", "" );
+  RegDBCreateKeyEx ( szInstalledScansKey^"2001\\Parameters", "" );
+  RegDBCreateKeyEx ( szInstalledScansKey^"2001\\Parameters\\0", "" );
+  RegDBCreateKeyEx ( szInstalledScansKey^"2001\\Parameters\\1", "" );
+  RegDBCreateKeyEx ( szInstalledScansKey^"2001\\Parameters\\2", "" );
+
+  // Add the valid file types keys.
+  RegDBCreateKeyEx ( szFileTypesKey^"c", "" );
+  RegDBCreateKeyEx ( szFileTypesKey^"cpp", "" );
+  RegDBCreateKeyEx ( szFileTypesKey^"cxx", "" );
+  RegDBCreateKeyEx ( szFileTypesKey^"h", "" );
+  RegDBCreateKeyEx ( szFileTypesKey^"hpp", "" );
+  RegDBCreateKeyEx ( szFileTypesKey^"hxx", "" );
+  RegDBCreateKeyEx ( szFileTypesKey^"java", "" );
+  RegDBCreateKeyEx ( szFileTypesKey^"sql", "" );
+
+
+  // Set the attributes for the each registry key.
+
+  // Open With Settings
+  RegDBSetKeyValueEx ( szOpenWithKey^"OpenWithList" , "a" , REGDB_STRING , @PRODUCT_KEY , -1 );
+  RegDBSetKeyValueEx ( szOpenWithKey^"OpenWithList" , "MRUList" , REGDB_STRING , "a" , -1 );
+  RegDBSetKeyValueEx ( szOpenWithKey^"OpenWithProgids" , szDocType , REGDB_BINARY , "" , -1 );
+
+  // Application Settings
+  RegDBSetKeyValueEx ( szAppSettingsKey , "Program Path" , REGDB_STRING , TARGETDIR+"\\" , -1 );
+  RegDBSetKeyValueEx ( szAppSettingsKey , "Header Path" , REGDB_STRING , TARGETDIR^"include" , -1 );
+  RegDBSetKeyValueEx ( szAppSettingsKey , "Source Path" , REGDB_STRING , TARGETDIR^"source" , -1 );
+  RegDBSetKeyValueEx ( szAppSettingsKey , "Fileset File" , REGDB_STRING , "filestoscan.scp" , -1 );
+  RegDBSetKeyValueEx ( szAppSettingsKey , "Fileset Path" , REGDB_STRING , TARGETDIR+"\\" , -1 );
+  RegDBSetKeyValueEx ( szAppSettingsKey , "Results Viewer" , REGDB_STRING , WINSYSDIR^"notepad.exe" , -1 );
+  RegDBSetKeyValueEx ( szAppSettingsKey , "Maximum Files" , REGDB_NUMBER , "20" , -1 );
+
+  // Installed Scans Settings
+  RegDBSetKeyValueEx ( szInstalledScansKey^"2001" , "Type" , REGDB_NUMBER , "2001" , -1 );
+  RegDBSetKeyValueEx ( szInstalledScansKey^"2001" , "Title" , REGDB_STRING , "Unicode" , -1 );
+  RegDBSetKeyValueEx ( szInstalledScansKey^"2001" , "Engine" , REGDB_STRING , TARGETDIR^"CodeChangeCom.exe" , -1 );
+  RegDBSetKeyValueEx ( szInstalledScansKey^"2001" , "Results File" , REGDB_STRING , "unicoderesults.txt" , -1 );
+  RegDBSetKeyValueEx ( szInstalledScansKey^"2001" , "Results File Path" , REGDB_STRING , TARGETDIR+"\\" , -1 );
+  RegDBSetKeyValueEx ( szInstalledScansKey^"2001" , "Uses Command Prompt" , REGDB_NUMBER , "0" , -1 );
+  RegDBSetKeyValueEx ( szInstalledScansKey^"2001" , "Uses Temporary Analysis Folders" , REGDB_NUMBER , "1" , -1 );
+  RegDBSetKeyValueEx ( szInstalledScansKey^"2001" , "Uses File Set" , REGDB_NUMBER , "0" , -1 );
+  RegDBSetKeyValueEx ( szInstalledScansKey^"2001" , "Uses Selected File" , REGDB_NUMBER , "0" , -1 );
+  RegDBSetKeyValueEx ( szInstalledScansKey^"2001\\Parameters\\0" , "ID" , REGDB_NUMBER , "1" , -1 );
+  RegDBSetKeyValueEx ( szInstalledScansKey^"2001\\Parameters\\0" , "Value" , REGDB_STRING , "command.txt" , -1 );
+  RegDBSetKeyValueEx ( szInstalledScansKey^"2001\\Parameters\\0" , "Uses Parameter Path" , REGDB_NUMBER , "1" , -1 );
+  RegDBSetKeyValueEx ( szInstalledScansKey^"2001\\Parameters\\0" , "Parameter Path" , REGDB_STRING , TARGETDIR+"\\" , -1 );
+  RegDBSetKeyValueEx ( szInstalledScansKey^"2001\\Parameters\\0" , "Append End Space" , REGDB_NUMBER , "1" , -1 );
+  RegDBSetKeyValueEx ( szInstalledScansKey^"2001\\Parameters\\1" , "ID" , REGDB_NUMBER , "2" , -1 );
+  RegDBSetKeyValueEx ( szInstalledScansKey^"2001\\Parameters\\1" , "Value" , REGDB_STRING , "${rf}" , -1 );
+  RegDBSetKeyValueEx ( szInstalledScansKey^"2001\\Parameters\\1" , "Uses Parameter Path" , REGDB_NUMBER , "0" , -1 );
+  RegDBSetKeyValueEx ( szInstalledScansKey^"2001\\Parameters\\1" , "Parameter Path" , REGDB_STRING , "" , -1 );
+  RegDBSetKeyValueEx ( szInstalledScansKey^"2001\\Parameters\\1" , "Append End Space" , REGDB_NUMBER , "1" , -1 );
+  RegDBSetKeyValueEx ( szInstalledScansKey^"2001\\Parameters\\2" , "ID" , REGDB_NUMBER , "3" , -1 );
+  RegDBSetKeyValueEx ( szInstalledScansKey^"2001\\Parameters\\2" , "Value" , REGDB_STRING , "audit" , -1 );
+  RegDBSetKeyValueEx ( szInstalledScansKey^"2001\\Parameters\\2" , "Uses Parameter Path" , REGDB_NUMBER , "0" , -1 );
+  RegDBSetKeyValueEx ( szInstalledScansKey^"2001\\Parameters\\2" , "Parameter Path" , REGDB_STRING , "" , -1 );
+  RegDBSetKeyValueEx ( szInstalledScansKey^"2001\\Parameters\\2" , "Append End Space" , REGDB_NUMBER , "0" , -1 );
+
+  // Valid File Types Settings
+  RegDBSetKeyValueEx ( szFileTypesKey^"c" , "Extension" , REGDB_STRING , "c" , -1 );
+  RegDBSetKeyValueEx ( szFileTypesKey^"c" , "Description" , REGDB_STRING , "C Source Files" , -1 );
+  RegDBSetKeyValueEx ( szFileTypesKey^"c" , "Grouping" , REGDB_STRING , "S" , -1 );
+
+  RegDBSetKeyValueEx ( szFileTypesKey^"cpp" , "Extension" , REGDB_STRING , "cpp" , -1 );
+  RegDBSetKeyValueEx ( szFileTypesKey^"cpp" , "Description" , REGDB_STRING , "C++ Source Files" , -1 );
+  RegDBSetKeyValueEx ( szFileTypesKey^"cpp" , "Grouping" , REGDB_STRING , "S" , -1 );
+
+  RegDBSetKeyValueEx ( szFileTypesKey^"cxx" , "Extension" , REGDB_STRING , "cxx" , -1 );
+  RegDBSetKeyValueEx ( szFileTypesKey^"cxx" , "Description" , REGDB_STRING , "C/C++ Source Files" , -1 );
+  RegDBSetKeyValueEx ( szFileTypesKey^"cxx" , "Grouping" , REGDB_STRING , "S" , -1 );
+
+  RegDBSetKeyValueEx ( szFileTypesKey^"h" , "Extension" , REGDB_STRING , "h" , -1 );
+  RegDBSetKeyValueEx ( szFileTypesKey^"h" , "Description" , REGDB_STRING , "C/C++ Header Files" , -1 );
+  RegDBSetKeyValueEx ( szFileTypesKey^"h" , "Grouping" , REGDB_STRING , "H" , -1 );
+
+  RegDBSetKeyValueEx ( szFileTypesKey^"hpp" , "Extension" , REGDB_STRING , "hpp" , -1 );
+  RegDBSetKeyValueEx ( szFileTypesKey^"hpp" , "Description" , REGDB_STRING , "C++ Header Files" , -1 );
+  RegDBSetKeyValueEx ( szFileTypesKey^"hpp" , "Grouping" , REGDB_STRING , "H" , -1 );
+
+  RegDBSetKeyValueEx ( szFileTypesKey^"hxx" , "Extension" , REGDB_STRING , "hxx" , -1 );
+  RegDBSetKeyValueEx ( szFileTypesKey^"hxx" , "Description" , REGDB_STRING , "C/C++ Header Files" , -1 );
+  RegDBSetKeyValueEx ( szFileTypesKey^"hxx" , "Grouping" , REGDB_STRING , "H" , -1 );
+
+  RegDBSetKeyValueEx ( szFileTypesKey^"java" , "Extension" , REGDB_STRING , "java" , -1 );
+  RegDBSetKeyValueEx ( szFileTypesKey^"java" , "Description" , REGDB_STRING , "Java Source Files" , -1 );
+  RegDBSetKeyValueEx ( szFileTypesKey^"java" , "Grouping" , REGDB_STRING , "S" , -1 );
+
+  RegDBSetKeyValueEx ( szFileTypesKey^"sql" , "Extension" , REGDB_STRING , "sql" , -1 );
+  RegDBSetKeyValueEx ( szFileTypesKey^"sql" , "Description" , REGDB_STRING , "SQL Scripts" , -1 );
+  RegDBSetKeyValueEx ( szFileTypesKey^"sql" , "Grouping" , REGDB_STRING , "S" , -1 );
+
+  return 0;
+ end;
+
+
+///////////////////////////////////////////////////////////////////////////////
+//
+// Function: SetupFolders
+//
+//  Purpose: This function creates all the folders and shortcuts for the
+//           setup.  This includes program groups and items for Windows 3.1.
+//
+///////////////////////////////////////////////////////////////////////////////
+function SetupFolders()
+ NUMBER nResult;
+ STRING svProgramExecutablePath;
+ STRING svHelpFilePath;
+ STRING svLicensePath;
+ STRING svListsFolderPath;
+ begin
+
+  // Create path strings to the program executable, license file, lists folder, and help file.
+  svProgramExecutablePath = szAppPath ^ "UniCheck.exe";
+  LongPathToQuote ( svProgramExecutablePath , TRUE );
+
+  svHelpFilePath = szAppPath ^ "UniCheck.hlp";
+  LongPathToQuote ( svHelpFilePath , TRUE );
+
+  svLicensePath = TARGETDIR ^ "license.txt";
+  LongPathToQuote ( svLicensePath , TRUE );
+
+  svListsFolderPath = TARGETDIR ^ "File Lists";
+  LongPathToQuote ( svListsFolderPath , TRUE );
+
+  // Create the user selected program group.
+  CreateProgramFolder ( SHELL_OBJECT_FOLDER );
+
+  // Add all UniversalChecker icons to the newly created program group.
+  AddFolderIcon ( SHELL_OBJECT_FOLDER , "UniversalChecker", svProgramExecutablePath, "", "", 0, "", REPLACE );
+  AddFolderIcon ( SHELL_OBJECT_FOLDER , "UniversalChecker Help", svHelpFilePath, "", "", 0, "", REPLACE );
+  AddFolderIcon ( SHELL_OBJECT_FOLDER , "UniversalChecker Lists", svListsFolderPath, "", "", 0, "", REPLACE );
+  AddFolderIcon ( SHELL_OBJECT_FOLDER , "License Agreement", svLicensePath, "", "", 0, "", REPLACE );
+
+  // Add UniversalChecker icon and list folder link to the desktop.
+  AddFolderIcon ( FOLDER_DESKTOP , "UniversalChecker Lists", svListsFolderPath, "", "", 0, "", REPLACE );
+  AddFolderIcon ( FOLDER_DESKTOP , "UniversalChecker" , svProgramExecutablePath , "" , "" , 0 , "" , REPLACE );
+
+  nResult = CreateShellObjects( "" );
+
+  return nResult;
+ end;
+
+
+///////////////////////////////////////////////////////////////////////////////
+//                                                                           //
+// Function: CleanUpInstall                                                  //
+//                                                                           //
+//  Purpose: This cleans up the setup.  Anything that should                 //
+//           be released or deleted at the end of the setup should           //
+//           be done here.                                                   //
+//                                                                           //
+///////////////////////////////////////////////////////////////////////////////
+function CleanUpInstall()
+ begin
+
+  ListDestroy( listStartCopy );
+
+  if (bInstallAborted) then
+      return 0;
+  endif;
+
+  DialogShowSdFinishReboot();
+
+  if (BATCH_INSTALL) then       // Ensure locked files are properly written.
+      CommitSharedFiles(0);
+  endif;
+
+  return 0;
+ end;
+
+
+///////////////////////////////////////////////////////////////////////////////
+//                                                                           //
+// Function: SetupInstall                                                    //
+//                                                                           //
+//  Purpose: This will setup the installation.  Any general initialization   //
+//           needed for the installation should be performed here.           //
+//                                                                           //
+///////////////////////////////////////////////////////////////////////////////
+function SetupInstall()
+ begin
+
+  Enable( CORECOMPONENTHANDLING );
+
+  bInstallAborted = FALSE;
+
+  if (bIs32BitSetup) then
+      svDir = PROGRAMFILES ^ @PRODUCT_NAME;
+  else
+      svDir = PROGRAMFILES ^ @PRODUCT_NAME16; // If the target is a 16-bit system, use short names.
+  endif;
+
+  TARGETDIR  = svDir;
+
+  // Create the installation summary text and add the summary header line.
+  listStartCopy = ListCreate(STRINGLIST);
+  ListAddString( listStartCopy, "Setup Summary:", AFTER );
+  ListAddString( listStartCopy, "", AFTER );
+
+  SdProductName( @PRODUCT_NAME );
+
+  Enable( DIALOGCACHE );
+
+  return 0;
+ end;
+
+
+///////////////////////////////////////////////////////////////////////////////
+//                                                                           //
+// Function:  SetupScreen                                                    //
+//                                                                           //
+//  Purpose:  This function establishes  the screen look.  This includes     //
+//            colors, fonts, and text to be displayed.                       //
+//                                                                           //
+///////////////////////////////////////////////////////////////////////////////
+function SetupScreen()
+ begin
+
+  Enable( FULLWINDOWMODE );
+  Enable( INDVFILESTATUS );
+  SetTitle( @TITLE_MAIN, 24, WHITE );
+
+  SetTitle( @TITLE_CAPTIONBAR, 0, BACKGROUNDCAPTION ); // Caption Bar Text
+
+  Enable( BACKGROUND );
+
+  Delay( 1 );
+ end;
+
+
+///////////////////////////////////////////////////////////////////////////////
+//                                                                           //
+// Function:  CheckRequirements                                              //
+//                                                                           //
+//  Purpose:  This function checks all minimum requirements for the          //
+//            application being installed.  If any fail, then the user       //
+//            is informed and the setup is terminated.                       //
+//                                                                           //
+///////////////////////////////////////////////////////////////////////////////
+function CheckRequirements()
+    NUMBER  nvDx, nvDy, nvResult;
+    STRING  svResult;
+
+ begin
+
+  bWinNT           = FALSE;
+  bIsShellExplorer = FALSE;
+
+  // Check screen resolution.
+  GetExtents( nvDx, nvDy );
+
+  if (nvDy < 480) then
+      MessageBox( @ERROR_VGARESOLUTION, WARNING );
+      abort;
+  endif;
+
+  // Set 'setup' operation mode.
+  bIs32BitSetup = TRUE;
+  GetSystemInfo( ISTYPE, nvResult, svResult );
+  if (nvResult = 16) then
+      bIs32BitSetup = FALSE; // Running 16-bit setup.
+      return 0; // No additional information required.
+  endif;
+
+  // --- 32-bit Testing After This Point ---
+
+  // Determine the target system's operating system.
+  GetSystemInfo( OS, nvResult, svResult );
+
+  if (nvResult =  IS_WINDOWSNT) then
+      // Running Windows NT.
+      bWinNT = TRUE;
+
+      // Check to see if the shell being used is EXPLORER shell.
+      if (GetSystemInfo( OSMAJOR, nvResult, svResult ) = 0) then
+          if (nvResult >= 4) then
+              bIsShellExplorer = TRUE;
+          endif;
+      endif;
+
+  elseif (nvResult = IS_WINDOWS95 ) then
+      bIsShellExplorer = TRUE;
+
+  endif;
+
+end;
+
+
+///////////////////////////////////////////////////////////////////////////////
+//                                                                           //
+// Function: DialogShowSdWelcome                                             //
+//                                                                           //
+//  Purpose: This function handles the standard welcome dialog.              //
+//                                                                           //
+//                                                                           //
+///////////////////////////////////////////////////////////////////////////////
+function DialogShowSdWelcome()
+    NUMBER nResult;
+    STRING szTitle, szMsg;
+ begin
+
+  szTitle = "";
+  szMsg   = "";
+  nResult = SdWelcome( szTitle, szMsg );
+
+  return nResult;
+ end;
+
+
+///////////////////////////////////////////////////////////////////////////////
+//                                                                           //
+// Function: DialogShowSdLicense                                             //
+//                                                                           //
+//  Purpose: This function displays the license agreement dialog.            //
+//                                                                           //
+//                                                                           //
+///////////////////////////////////////////////////////////////////////////////
+function DialogShowSdLicense()
+    NUMBER nResult;
+    STRING szTitle, szMsg, szQuestion, szLicenseFile;
+ begin
+
+  szLicenseFile = SUPPORTDIR ^ "license.txt";
+  szTitle    = "";
+  szMsg      = "";
+  szQuestion = "";
+  nResult    = SdLicense( szTitle, szMsg, szQuestion, szLicenseFile );
+
+  return nResult;
+ end;
+
+
+///////////////////////////////////////////////////////////////////////////////
+//                                                                           //
+// Function: DialogShowSdSelectFolder                                        //
+//                                                                           //
+//  Purpose: This function displays the standard folder selection dialog.    //
+//                                                                           //
+//                                                                           //
+///////////////////////////////////////////////////////////////////////////////
+function DialogShowSdSelectFolder()
+    NUMBER nResult;
+    STRING szTitle, szMsg;
+ begin
+
+  if (SHELL_OBJECT_FOLDER = "") then
+      SHELL_OBJECT_FOLDER = @FOLDER_NAME;
+  endif;
+
+  szTitle    = "";
+  szMsg      = "";
+  nResult    = SdSelectFolder( szTitle, szMsg, SHELL_OBJECT_FOLDER );
+
+  return nResult;
+ end;
+
+
+///////////////////////////////////////////////////////////////////////////////
+//                                                                           //
+// Function: DialogShowSdStartCopy                                           //
+//                                                                           //
+//   Purpose: This function displays the dialog preceding the start of the   //
+//            file copying process.                                          //
+//                                                                           //
+///////////////////////////////////////////////////////////////////////////////
+function DialogShowSdStartCopy()
+    NUMBER nResult;
+    STRING szTitle, szMsg;
+ begin
+
+  // Load the installation selections summary text.
+  ListAddString( listStartCopy, "UniversalChecker will be installed to:", AFTER );
+  ListAddString( listStartCopy, TARGETDIR, AFTER );
+  ListAddString( listStartCopy, "", AFTER );
+  ListAddString( listStartCopy, "Program icons will be added to:", AFTER );
+  ListAddString( listStartCopy, "The desktop and the " + SHELL_OBJECT_FOLDER + " Start menu group.", AFTER );
+  ListAddString( listStartCopy, "", AFTER );
+
+  szTitle = "";
+  szMsg   = "";
+  nResult = SdStartCopy( szTitle, szMsg, listStartCopy );
+
+  // Remove the summary text if the user pressed the back button.
+  if ( nResult = BACK ) then
+        ListDeleteString ( listStartCopy );
+        ListDeleteString ( listStartCopy );
+        ListDeleteString ( listStartCopy );
+        ListDeleteString ( listStartCopy );
+        ListDeleteString ( listStartCopy );
+        ListDeleteString ( listStartCopy );
+  endif;
+
+  return nResult;
+ end;
+
+
+///////////////////////////////////////////////////////////////////////////////
+//                                                                           //
+// Function: DialogShowSdFinishReboot                                        //
+//                                                                           //
+//  Purpose: This function will show the last dialog of the product.         //
+//           It will allow the user to reboot and/or show some readme text.  //
+//                                                                           //
+///////////////////////////////////////////////////////////////////////////////
+function DialogShowSdFinishReboot()
+    NUMBER nResult, nDefOptions;
+    STRING szTitle, szMsg1, szMsg2, szOption1, szOption2;
+    NUMBER bOpt1, bOpt2;
+ begin
+
+  if (!BATCH_INSTALL) then
+      bOpt1 = FALSE;
+      bOpt2 = FALSE;
+      szMsg1 = "\n\n\nUniversalChecker installed successfully.";
+      szMsg2 = "";
+      szOption1 = "";
+      szOption2 = "";
+      nResult = SdFinish( szTitle, szMsg1, szMsg2, szOption1, szOption2, bOpt1, bOpt2 );
+      return 0;
+  endif;
+
+  nDefOptions = SYS_BOOTMACHINE;
+  szTitle     = "";
+  szMsg1      = "";
+  szMsg2      = "";
+  nResult     = SdFinishReboot( szTitle, szMsg1, nDefOptions, szMsg2, 0 );
+
+  return nResult;
+ end;
+
+ // --- Include Additional Scripts File Section ---
+
+#include "sddialog.rul"
+
+
+
+
+

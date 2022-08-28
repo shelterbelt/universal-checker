@@ -1,0 +1,53 @@
+[Language]
+LanguageSupport0=0009
+
+[OperatingSystem]
+OSSupport=0000000000010010
+
+[Data]
+CurrentMedia=UniversalChecker
+set_mifserial=
+ProductName=UniversalChecker
+CurrentComponentDef=Default.cdf
+set_dlldebug=No
+AppExe=C:\Program Files\UniversalChecker\GUI\UniCheck.exe
+DevEnvironment=Microsoft Visual C++ 6
+set_mif=No
+set_testmode=No
+Instructions=Instructions.txt
+EmailAddresss=
+SummaryText=
+Department=
+Type=Software Development Application
+Author=
+HomeURL=
+InstallRoot=C:\My Installations\UniversalChecker
+set_level=Level 3
+InstallationGUID=7e90cdb1-ede7-40a9-bed9-fdbdc3d7bf50
+Version=4.00.000
+set_miffile=Status.mif
+set_args=
+set_maxerr=50
+Notes=Notes.txt
+CurrentFileGroupDef=Default.fdf
+set_dllcmdline=
+set_warnaserr=No
+Copyright=
+set_preproc=
+Category=
+CurrentPlatform=
+set_compileb4build=No
+set_crc=Yes
+set_maxwarn=50
+Description=Description.txt
+CompanyName=PeopleSoft
+CurrentLanguage=English
+
+[MediaInfo]
+mediadata0=Default/Media\Default
+mediadata1=UniversalChecker/Media\UniversalChecker
+
+[General]
+Type=INSTALLMAIN
+Version=1.10.000
+
