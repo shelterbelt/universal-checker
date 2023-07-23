@@ -1,5 +1,8 @@
 // UniCheckConstants.h : Header File Containing Constants Definitions for the UNICHECK Application
 //
+/*
+ * Copyright (c) 2004 Mark Johnson
+ */
 
 
 /* Application Constants */

@@ -1,5 +1,8 @@
 /////////////////////////////////////////////////////////////////////////////
 // CAboutDlg Dialog Used for App About
+/*
+ * Copyright (c) 2004 Mark Johnson
+ */
 
 #if !defined(UNICHECK_ABOUTDLG_H)
 #define UNICHECK_ABOUTDLG_H

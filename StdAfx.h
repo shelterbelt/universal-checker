@@ -2,6 +2,9 @@
 //  or project specific include files that are used frequently, but
 //      are changed infrequently
 //
+/*
+ * Copyright (c) 2004 Mark Johnson
+ */
 
 #if !defined(AFX_STDAFX_H__654A0990_4298_4F33_8F84_2AE8357A1931__INCLUDED_)
 #define AFX_STDAFX_H__654A0990_4298_4F33_8F84_2AE8357A1931__INCLUDED_

@@ -1,5 +1,8 @@
 // UniCheck.cpp : Defines the class behaviors for the application.
 //
+/*
+ * Copyright (c) 2004 Mark Johnson
+ */
 
 #include "stdafx.h"
 #include "UniCheck.h"

@@ -6,6 +6,9 @@
 #endif // _MSC_VER > 1000
 // AddFilesDialog.h : Header File
 //
+/*
+ * Copyright (c) 2004 Mark Johnson
+ */
 
 
 /////////////////////////////////////////////////////////////////////////////

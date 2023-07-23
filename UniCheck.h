@@ -1,5 +1,8 @@
 // UniCheck.h : Main Header File for the UNICHECK Application
 //
+/*
+ * Copyright (c) 2004 Mark Johnson
+ */
 
 #if !defined(AFX_UNICHECK_H__DB414D49_04AB_4D84_9B8F_4E2542DF8A26__INCLUDED_)
 #define AFX_UNICHECK_H__DB414D49_04AB_4D84_9B8F_4E2542DF8A26__INCLUDED_

@@ -1,5 +1,8 @@
 // UniCheckDoc.h : Interface of the CUniCheckDoc Class
 //
+/*
+ * Copyright (c) 2004 Mark Johnson
+ */
 /////////////////////////////////////////////////////////////////////////////
 
 #if !defined(AFX_UNICHECKDOC_H__F821B59C_80F1_40B5_8F02_D5976C526CDA__INCLUDED_)

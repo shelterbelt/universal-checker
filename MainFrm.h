@@ -1,5 +1,8 @@
 // MainFrm.h : Interface of the CMainFrame Class
 //
+/*
+ * Copyright (c) 2004 Mark Johnson
+ */
 /////////////////////////////////////////////////////////////////////////////
 
 #if !defined(AFX_MAINFRM_H__720BCDB2_5326_403B_9A2E_617DBAE82996__INCLUDED_)

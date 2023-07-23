@@ -1,5 +1,8 @@
 // UniCheckView.h : Interface of the CUniCheckView Class
 //
+/*
+ * Copyright (c) 2004 Mark Johnson
+ */
 /////////////////////////////////////////////////////////////////////////////
 
 #if !defined(AFX_UNICHECKVIEW_H__A9B1F03E_3335_4F2B_9D8D_B5D6E1476A14__INCLUDED_)

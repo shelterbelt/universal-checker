@@ -1,5 +1,8 @@
 // UniCheckDoc.cpp : Implementation of the CUniCheckDoc Class
 //
+/*
+ * Copyright (c) 2004 Mark Johnson
+ */
 
 #include "stdafx.h"
 #include "UniCheck.h"

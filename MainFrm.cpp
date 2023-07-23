@@ -1,5 +1,8 @@
 // MainFrm.cpp : Implementation of the CMainFrame Class
 //
+/*
+ * Copyright (c) 2004 Mark Johnson
+ */
 
 #include "stdafx.h"
 #include "UniCheck.h"

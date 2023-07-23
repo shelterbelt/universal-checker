@@ -1,5 +1,8 @@
 // CLPreviewDlg.cpp : Implementation File
 //
+/*
+ * Copyright (c) 2004 Mark Johnson
+ */
 
 #include "stdafx.h"
 #include "UniCheck.h"
